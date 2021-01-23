@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Expires" content="0">
+    <meta http-equiv="Last-Modified" content="0">
+    <meta http-equiv="Cache-Control" content="no-cache, mustrevalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <title>Usuarios</title>
+    <link rel="stylesheet" href="css/estiloconsul.css">
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-storage.js"></script>
+    <script src="js/util.js"></script>
+    <script type="module" src="js/mis-checks.js"></script>
+    <script type="module" src="js/mi-footer.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyCBMZV7bw-ui0chu6VFklN71xX7cW5jnsU",
+            authDomain: "comida-8bb9f.firebaseapp.com",
+            projectId: "comida-8bb9f",
+            storageBucket: "comida-8bb9f.appspot.com",
+            messagingSenderId: "905503267452",
+            appId: "1:905503267452:web:0d3b49fdd3e9f0eda4c7f9"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
+
+
+
+</head>
+
+<body background="https://www.solofondos.com/wp-content/uploads/2015/11/Imagen-de-fondo-html.jpg" width="500" height="500" ;></body>
+
+<button type="button" onclick="location.href='index.html'" style="background-color: green; color:white; border-color: black; height: 40px ;width: 150px; float: right;margin: 20px; ">REGRESAR AL MENU PRINCIPAL</button>
+
+<button type="button" onclick="location.href='usuarios.html'" style="background-color: rgb(148, 124, 155); color:white; border-color: black; height: 40px ;width: 150px; float:right;margin: 20px;">REGISTRAR COMIDA</button>
+<br>
+<br>
+<br>
+
+<script>
+    function muestraUsuario() {
+
+        var user = firebase.auth().currentUser;
+        let firestore = firebase.firestore();
+
+        document.getElementById("correo").innerHTML = "Correo: " + user.email;
+        document.getElementById("avatar").src = user.photoURL;
+        var userocu = document.getElementById("ocu");
+
+        var docRef = firestore.collection("USUARIO").doc(user.email);
+        docRef.get().then(function(doc) {
+            if (doc.exists) {
+                userocu.innerHTML = "ES UN : USUARIO ";
+            } else {
+                userocu.innerHTML = "ES UN: USUARIO";
+            }
+        }).catch(function(error) {
+            console.log("Error getting document:", error);
+        });
+
+
+    }
+</script>
+
+
+
+
+<form action="javascript:guarda()">
+    <div class="usuario">
+        <img id="avatar" src="" width="50px" style="border-radius: 50%;">
+        <p id="correo"></p>
+        <p id="ocu"></p>
+    </div>
+    <br><br><br><br><br><br><br>
+    <fieldset>
+        <legend>
+            <font color="red">ATENCION </font>
+        </legend>
+        <font color="red">
+            Si no puedes visualizar los platillos, debes de registrar tu correo dando click en "Registrar Comida" <br>aunque no ofrezcas comida.
+        </font>
+    </fieldset>
+    <header>
+        <br><br><br><br><br><br><br>
+        <ul class="usuarios" id="lista">
+
+            <li><progress max="100">LOADING…</progress></li>
+        </ul>
+
+        <mi-footer></mi-footer>
+
+</form>
+<script>
+    let id = "";
+    const auth = firebase.auth();
+    const storage = firebase.storage();
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({
+        prompt: "select_account"
+    });
+    const firestore = firebase.firestore();
+    auth.onAuthStateChanged(
+        async usuarioAuth => {
+            if (usuarioAuth && usuarioAuth.email) {
+                muestraUsuario()
+                cargaPlatillos();
+                muestradatos();
+                valida();
+            } else {
+                await auth.signInWithRedirect(provider);
+
+            }
+        },
+        procesaError
+    );
+
+
+    function valida() {
+        const db = firebase.firestore();
+        var aux2 = "Invitado",
+            aux3 = "Usuario";
+        var user = firebase.auth().currentUser;
+        var name, email, photoUrl, uid, emailVerified;
+
+        if (user != null) {
+            name = user.displayName;
+            email = user.email;
+            photoUrl = user.photoURL;
+            emailVerified = user.emailVerified;
+            uid = user.uid;
+        }
+        console.log(email);
+        db.collection("USUARIO")
+            .get()
+            .then(function(querySnapshot) {
+                querySnapshot.forEach(function(doc) {
+                    console.log(doc.data().SER_IDS);
+                    if (email == doc.id) {
+
+                        if ("Invitado" == doc.data().SER_IDS) {
+                            location.href = "registrarplatillos.html";
+
+                        }
+                        if ("Administrador" == doc.data().SER_IDS) {
+                            this.innerHTML = /*html*/
+                                ` 
+      <a href="#">platillo</a>`;
+                        }
+                        if ("Usuario" == doc.data().SER_IDS) {
+                            ocultar();
+                        }
+
+                    }
+
+                });
+
+            })
+            .catch(function(error) {
+                console.log("Error getting documents: ", error);
+            });
+
+    }
+
+
+
+    function cargaPlatillos() {
+        firestore.collection("PLATILLO").onSnapshot(
+            querySnapshot => {
+
+                platillo.innerHTML = /* html */
+                    `<option value="">-- SIN PLATILLO --</option>`;
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    platillo.innerHTML += /* html */
+                        `<option value="${cod(doc.id)}">
+                ${cod(data.COM_PLATILLO)}
+                </option>`;
+                });
+            },
+            e => {
+                procesaError(e);
+                cargaPlatillos();
+            }
+        );
+    }
+
+
+    function muestradatos() {
+        firestore.collection("USUARIO").onSnapshot(
+            async querySnapshot => {
+                const promesas = [];
+                querySnapshot.forEach(doc => promesas.push(calculaCelda(doc)));
+                const celdas = await Promise.all(promesas);
+                lista.innerHTML = "";
+                for (const celda of celdas) {
+                    lista.innerHTML += celda;
+                }
+            },
+            e => {
+                procesaError(e);
+                muestradatos();
+            }
+        );
+    }
+    async function calculaCelda(doc) {
+        const data = doc.data();
+
+        const pasaDoc = data.COM_ID ?
+            await firestore.collection("PLATILLO").doc(data.COM_ID).get() :
+            null;
+        const pasaNombre = (pasaDoc && pasaDoc.exists) ?
+            pasaDoc.data().COM_PLATILLO : "NO HAY PLATILLO";
+
+        const servDocs = (await Promise.all((data.SER_IDS || [])
+                .map(async serId =>
+                    await firestore.collection("SERVICIO").doc(serId).get())))
+            .filter(doc => doc.exists);
+        const servicios = servDocs
+            .map(doc => `${doc.id}: ${doc.data().SER_DESCR}`)
+            .sort();
+
+        const url = await storage.ref(doc.id).getDownloadURL();
+        return ( /* html */
+            `<li class="doc" onclick="muestra('${cod(doc.id)}')">
+            <figure>
+              <img src="${cod(url)}" alt="${cod(doc.id)}" width="200px">
+            </figure>
+            <div>
+              <strong>${cod(doc.id)}</strong><br>
+              ${cod(pasaNombre)}<br>
+              ${servicios.map(cod).join("<br>")}
+            </div>
+          </li><br>`);
+    }
+
+    async function cierraSesion() {
+        try {
+            firebase.auth().signOut().then(function() {
+
+            }).catch(function(error) {
+
+            });
+        } catch (e) {
+            procesaError(e);
+        }
+
+    }
+</script>
+
+</body>
+
+</html>
