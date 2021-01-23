@@ -1,0 +1,13 @@
+customElements.define("herramientas-abc", class extends HTMLElement {
+
+    connectedCallback() {
+        this.innerHTML = /*html*/
+            `<button id="agregar" type="button" class="btn btn-success" onclick="agrega()">
+          Agregar...
+        </button>
+        <button class="btn btn-info" type="submit">GUARDAR </button>
+        <button  class="btn btn-danger" id="eliminar" type="button" onclick="elimina()">
+          Eliminar
+        </button>`;
+    }
+});
